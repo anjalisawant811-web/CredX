@@ -816,3 +816,83 @@ body {
   color: var(--success);
   font-weight: 500;
 }
+
+
+/* =========================================
+   GLOBAL DARK TABLE SYSTEM (CREDX)
+   ========================================= */
+
+/* Force dark background */
+table {
+  background-color: #0f172a !important;
+  color: #e5e7eb !important;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Header */
+table thead {
+  background: rgba(255,255,255,0.05) !important;
+}
+
+table th {
+  color: #cbd5e1 !important;
+  font-weight: 600;
+  border: none !important;
+  padding: 14px !important;
+}
+
+/* Rows */
+table tbody tr {
+  background-color: #0f172a !important;
+  transition: all 0.2s ease;
+}
+
+/* Alternate rows (subtle) */
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #111827 !important;
+}
+
+/* Cells */
+table td {
+  color: #f1f5f9 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  padding: 14px !important;
+  vertical-align: middle;
+}
+
+/* Hover effect */
+.table-hover tbody tr:hover {
+  background-color: #1e293b !important;
+}
+
+/* Remove ugly borders */
+.table-bordered {
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* Fix Bootstrap overrides completely */
+.table,
+.table-striped,
+.table-hover,
+.table-bordered {
+  background: transparent !important;
+}
+
+/* =========================================
+   FIX FADED TEXT ISSUE (VERY IMPORTANT)
+   ========================================= */
+
+td, th {
+  opacity: 1 !important;
+}
+
+/* =========================================
+   OPTIONAL: Improve badges inside table
+   ========================================= */
+
+.badge {
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 6px;
+}
