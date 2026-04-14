@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CredX Admin Panel</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0b1220, #111c33);
+      color: #e5e7eb;
+    }
+
+    .container {
+      margin-top: 40px;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding: 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .badge-total {
+      background: rgba(59,130,246,0.15);
+      border: 1px solid rgba(59,130,246,0.3);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: #93c5fd;
+    }
+
+    /* TABLE CARD */
+    .table-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    table {
+      margin: 0;
+    }
+
+    thead {
+      background: rgba(255,255,255,0.05);
+    }
+
+    th {
+      color: #cbd5e1 !important;
+      font-weight: 600;
+      border: none !important;
+    }
+
+    td {
+      color: #e5e7eb !important;
+      border-color: rgba(255,255,255,0.05) !important;
+      padding: 14px !important;
+    }
+
+    tr:hover {
+      background: rgba(255,255,255,0.04);
+      transition: 0.2s;
+    }
+
+    /* RISK TAGS */
+    .tag {
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .high { background: rgba(239,68,68,0.15); color: #fca5a5; }
+    .medium { background: rgba(245,158,11,0.15); color: #fcd34d; }
+    .low { background: rgba(34,197,94,0.15); color: #86efac; }
+
+    /* NAME STYLE */
+    .name {
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="title">📊 CredX Admin Dashboard</div>
+    <div class="badge-total">
+      Total Customers: {{ customers|length }}
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card">
+
+    <table class="table table-dark table-hover mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Income</th>
+          <th>Expenses</th>
+          <th>Risk Score</th>
+          <th>Risk</th>
+          <th>Loan Type</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td>{{ c.id }}</td>
+
+          <td class="name">{{ c.name }}</td>
+
+          <td>₹{{ "{:,.0f}".format(c.income) }}</td>
+          <td>₹{{ "{:,.0f}".format(c.expenses) }}</td>
+
+          <td>{{ c.risk_score }}</td>
+
+          <td>
+            {% if c.risk_category == "High Risk" %}
+              <span class="tag high">High</span>
+            {% elif c.risk_category == "Medium Risk" %}
+              <span class="tag medium">Medium</span>
+            {% else %}
+              <span class="tag low">Low</span>
+            {% endif %}
+          </td>
+
+          <td>{{ c.loan_type }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+id,name,income,expenses,missed_payments,credit_utilization,loan_type,loan_amount,email,phone,added_on
+1,Priya Sharma,85000,72000,2,78,Personal Loan,500000,priya.sharma@email.com,+91-9876543210,2025-01-10
+2,Rahul Verma,120000,45000,0,22,Home Loan,800000,rahul.verma@email.com,+91-9123456789,2025-01-15
+3,Anjali Mehta,60000,58000,4,91,Personal Loan,300000,anjali.mehta@email.com,+91-9988776655,2025-01-18
+4,Vikram Singh,200000,80000,0,15,Business Loan,2000000,vikram.singh@email.com,+91-9001234567,2025-01-20
+5,Sneha Patel,55000,50000,1,55,Vehicle Loan,250000,sneha.patel@email.com,+91-9765432101,2025-02-01
+6,Arjun Nair,95000,88000,3,85,Personal Loan,600000,arjun.nair@email.com,+91-9345678901,2025-02-05
+7,Meena Krishnan,150000,60000,0,10,Home Loan,1500000,meena.k@email.com,+91-9456789012,2025-02-10
+8,Deepak Joshi,42000,41000,5,95,Personal Loan,150000,deepak.joshi@email.com,+91-9567890123,2025-02-15

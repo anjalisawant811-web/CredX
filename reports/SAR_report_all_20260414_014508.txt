@@ -1,0 +1,54 @@
+================================================================================
+         CREDX — SUSPICIOUS ACTIVITY REPORT (SAR)
+         Generated: 2026-04-14 01:45:08
+         Total Records: 3
+================================================================================
+
+--------------------------------------------------------------------------------
+Customer ID   : 3
+Customer Name : Satyajeet Patil
+Risk Score    : 51.58 / 100
+Risk Level    : MEDIUM
+Timestamp     : 2026-04-14
+Top Factors   :
+              • missed-emi (6 missed payments)
+Decision Logic:
+  Rule-Based: score=51.58 → Medium Risk | LLM Reasoning: Random Forest identifies moderate stress signals with some volatility. Preventive engagement recommended.
+Action Taken  :
+              → sms-alert
+              → proactive-wellness-email
+              → auto-debit-enrollment-suggested
+
+--------------------------------------------------------------------------------
+Customer ID   : 1
+Customer Name : Pratyusha Nalavade
+Risk Score    : 45.7 / 100
+Risk Level    : MEDIUM
+Timestamp     : 2026-04-13
+Top Factors   :
+              • missed-emi (3 missed payments)
+Decision Logic:
+  Rule-Based: score=45.7 → Medium Risk | LLM Reasoning: Random Forest identifies moderate stress signals with some volatility. Preventive engagement recommended.
+Action Taken  :
+              → sms-alert
+              → proactive-wellness-email
+              → auto-debit-enrollment-suggested
+
+--------------------------------------------------------------------------------
+Customer ID   : 2
+Customer Name : rahi 
+Risk Score    : 40.6 / 100
+Risk Level    : MEDIUM
+Timestamp     : 2026-04-13
+Top Factors   :
+              • missed-emi (3 missed payments)
+Decision Logic:
+  Rule-Based: score=40.6 → Medium Risk | LLM Reasoning: Random Forest identifies moderate stress signals with some volatility. Preventive engagement recommended.
+Action Taken  :
+              → sms-alert
+              → proactive-wellness-email
+              → auto-debit-enrollment-suggested
+
+================================================================================
+END OF REPORT
+================================================================================

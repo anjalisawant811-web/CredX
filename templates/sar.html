@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  /* ── SAR Page Custom Styles ───────────────────────────────────────────── */
+  :root {
+    --brand-dark: #1a1f36;
+    --brand-blue: #364fc7;
+    --high:    #dc3545;
+    --medium:  #fd7e14;
+    --low:     #198754;
+    --surface: #f8f9fa;
+    --border:  #dee2e6;
+    --text:    #212529;
+    --muted:   #6c757d;
+  }
+
+  .sar-hero {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, #2c3560 100%);
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 24px rgba(26,31,54,.25);
+  }
+  .sar-hero h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: .25rem; }
+  .sar-hero p  { color: #adb5bd; font-size: .9rem; margin: 0; }
+
+  /* KPI cards */
+  .kpi-card {
+    border-radius: 10px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    transition: transform .18s;
+  }
+  .kpi-card:hover { transform: translateY(-3px); }
+  .kpi-card .kpi-label { font-size: .75rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; opacity: .85; }
+  .kpi-card .kpi-value { font-size: 2.4rem; font-weight: 800; line-height: 1.1; }
+  .kpi-high   { background: var(--high);   color: #fff; }
+  .kpi-medium { background: var(--medium); color: #fff; }
+  .kpi-low    { background: var(--low);    color: #fff; }
+  .kpi-total  { background: var(--brand-dark); color: #fff; }
+
+  /* Toolbar */
+  .sar-toolbar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .sar-toolbar .section-title {
+    font-size: 1rem; font-weight: 700; color: var(--brand-dark);
+    margin: 0; flex: 1;
+  }
+
+  /* Filter pills */
+  .filter-pills .btn { border-radius: 20px; font-size: .8rem; padding: .3rem .9rem; }
+  .filter-pills .btn.active { box-shadow: 0 0 0 2px rgba(0,0,0,.2); }
+
+  /* Table */
+  .sar-table { border-collapse: separate; border-spacing: 0; width: 100%; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+  .sar-table thead th {
+    background: var(--brand-dark); color: #fff;
+    font-size: .78rem; font-weight: 600; letter-spacing: .04em;
+    padding: .9rem .8rem; border: none; position: sticky; top: 0; z-index: 2;
+  }
+  .sar-table tbody tr {
+    transition: background .12s;
+    cursor: pointer;
+  }
+  .sar-table tbody tr:nth-child(even) { background: var(--surface); }
+  .sar-table tbody tr:hover { background: #e9ecef; }
+  .sar-table td { padding: .75rem .8rem; font-size: .85rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+
+  /* Risk badges */
+  .risk-badge {
+    display: inline-block; padding: .28em .7em;
+    border-radius: 6px; font-size: .75rem; font-weight: 700;
+    letter-spacing: .04em; color: #fff;
+  }
+  .risk-badge.HIGH   { background: var(--high); }
+  .risk-badge.MEDIUM { background: var(--medium); }
+  .risk-badge.LOW    { background: var(--low); }
+
+  /* Score ring */
+  .score-ring {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 42px; height: 42px; border-radius: 50%;
+    font-size: .85rem; font-weight: 800; color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+
+  /* Factor pills */
+  .factor-pill {
+    display: inline-block; padding: .2em .55em;
+    border-radius: 4px; font-size: .7rem; font-weight: 600;
+    background: #e9ecef; color: var(--text); margin: 1px 2px;
+  }
+
+  /* Action chips */
+  .action-chip {
+    display: inline-block; padding: .2em .55em;
+    border-radius: 20px; font-size: .68rem; font-weight: 600;
+    background: #dbeafe; color: #1e40af; margin: 1px 2px;
+    border: 1px solid #bfdbfe;
+  }
+
+  /* Search box */
+  #sarSearch { max-width: 220px; font-size: .85rem; border-radius: 8px; }
+
+  /* Download bar */
+  .download-bar {
+    background: #e8f0fe; border: 1px solid #c7d7f8;
+    border-radius: 8px; padding: .6rem 1rem;
+    display: flex; align-items: center; gap: .75rem;
+    margin-bottom: 1.25rem; flex-wrap: wrap;
+  }
+  .download-bar span { font-size: .82rem; color: #364fc7; font-weight: 600; }
+
+  /* Responsive scroll */
+  .table-responsive { border-radius: 10px; }
+</style>
+
+<div class="container-fluid px-4 py-3">
+
+  <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+  <div class="sar-hero">
+    <div class="d-flex align-items-center gap-3 mb-1">
+      <span style="font-size:2rem;">🛡️</span>
+      <h1 class="mb-0">Suspicious Activity Report</h1>
+    </div>
+    <p>AI-powered risk assessment  ·  Generated: {{ generated_at }}  ·  CredX Compliance Engine</p>
+  </div>
+
+  <!-- ── KPI Cards ─────────────────────────────────────────────────────────── -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="kpi-card kpi-high">
+        <div class="kpi-label">High Risk</div>
+        <div class="kpi-value">{{ records | selectattr("risk_level", "eq", "HIGH") | list | length }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="kpi-card kpi-medium">
+        <div class="kpi-label">Medium Risk</div>
+        <div class="kpi-value">{{ records | selectattr("risk_level", "eq", "MEDIUM") | list | length }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="kpi-card kpi-low">
+        <div class="kpi-label">Low Risk</div>
+        <div class="kpi-value">{{ records | selectattr("risk_level", "eq", "LOW") | list | length }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="kpi-card kpi-total">
+        <div class="kpi-label">Total Records</div>
+        <div class="kpi-value">{{ records | length }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Download Bar ──────────────────────────────────────────────────────── -->
+  <div class="download-bar">
+    <span>📥 Export Report:</span>
+    <a href="/api/sar/pdf" class="btn btn-sm btn-primary" style="border-radius:6px;">
+      ⬇ Download PDF
+    </a>
+    <a href="/api/sar" class="btn btn-sm btn-outline-primary" style="border-radius:6px;" target="_blank">
+      { } View JSON
+    </a>
+  </div>
+
+  <!-- ── Toolbar ────────────────────────────────────────────────────────────── -->
+  <div class="sar-toolbar">
+    <p class="section-title">📋 Customer Risk Records</p>
+    <div class="filter-pills d-flex gap-1" id="filterPills">
+      <button class="btn btn-sm btn-outline-secondary active" data-filter="ALL">All</button>
+      <button class="btn btn-sm btn-danger"  data-filter="HIGH">High</button>
+      <button class="btn btn-sm btn-warning" data-filter="MEDIUM">Medium</button>
+      <button class="btn btn-sm btn-success" data-filter="LOW">Low</button>
+    </div>
+    <input id="sarSearch" type="search" class="form-control form-control-sm"
+           placeholder="🔍 Search customers…" oninput="filterTable()">
+  </div>
+
+  <!-- ── Records Table ─────────────────────────────────────────────────────── -->
+  <div class="table-responsive mb-5">
+    <table class="sar-table" id="sarTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Customer</th>
+          <th>Score</th>
+          <th>Risk Level</th>
+          <th>Top Factors</th>
+          <th>Decision Logic</th>
+          <th>Actions Taken</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        {% set lvl = r.risk_level %}
+        <tr data-level="{{ lvl }}" onclick="window.location='/customer/{{ r.customer_id }}'">
+          <td><a href="/customer/{{ r.customer_id }}" class="text-decoration-none fw-semibold"
+                 onclick="event.stopPropagation()">{{ r.customer_id }}</a></td>
+          <td>
+            <div class="fw-semibold">{{ r.customer_name }}</div>
+            <div class="text-muted" style="font-size:.72rem;">ID {{ r.customer_id }}</div>
+          </td>
+          <td>
+            <span class="score-ring"
+                  style="background:{% if lvl=='HIGH' %}var(--high){% elif lvl=='MEDIUM' %}var(--medium){% else %}var(--low){% endif %}">
+              {{ r.risk_score }}
+            </span>
+          </td>
+          <td><span class="risk-badge {{ lvl }}">{{ lvl }}</span></td>
+          <td>
+            {% for f in r.top_factors %}
+              <span class="factor-pill">{{ f }}</span>
+            {% endfor %}
+          </td>
+          <td style="max-width:220px;">
+            <span class="text-muted" style="font-size:.72rem; line-height:1.4;">{{ r.decision_logic }}</span>
+          </td>
+          <td>
+            {% for a in r.action_taken %}
+              <span class="action-chip">{{ a }}</span>
+            {% endfor %}
+          </td>
+          <td>
+            <span class="text-muted" style="font-size:.8rem;">{{ r.timestamp }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  // ── Filter by risk level ────────────────────────────────────────────────────
+  document.getElementById("filterPills").addEventListener("click", function(e) {
+    const btn = e.target.closest("[data-filter]");
+    if (!btn) return;
+    this.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    filterTable();
+  });
+
+  function filterTable() {
+    const activeBtn = document.querySelector("#filterPills [data-filter].active");
+    const level  = activeBtn ? activeBtn.dataset.filter : "ALL";
+    const search = document.getElementById("sarSearch").value.toLowerCase();
+
+    document.querySelectorAll("#sarTable tbody tr").forEach(tr => {
+      const lvlMatch  = level === "ALL" || tr.dataset.level === level;
+      const txtMatch  = tr.textContent.toLowerCase().includes(search);
+      tr.style.display = (lvlMatch && txtMatch) ? "" : "none";
+    });
+  }
+</script>
+
+{% endblock %}

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ customer.name }} – CredX</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg credx-navbar">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <span class="brand-text">Cred<span class="brand-x">X</span></span>
+    </a>
+    <div class="navbar-nav ms-auto d-flex flex-row align-items-center gap-3">
+      <a href="/" class="nav-back"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+      <div class="employee-chip"><i class="fa-solid fa-user-tie"></i><span>Emp: CR-4821</span></div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-4 py-4">
+
+  <!-- Profile Banner -->
+  <div class="profile-banner profile-{{ customer.risk_color }} mb-4">
+    <div class="pb-left">
+      <div class="pb-avatar">{{ customer.name[0] }}</div>
+      <div>
+        <h2 class="pb-name">{{ customer.name }}</h2>
+        <div class="pb-meta">
+          <span><i class="fa-solid fa-envelope"></i> {{ customer.email }}</span>
+          <span><i class="fa-solid fa-phone"></i> {{ customer.phone }}</span>
+          <span><i class="fa-solid fa-calendar"></i> Added {{ customer.added_on }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="pb-right">
+      <div class="pb-score-wrap">
+        <svg class="pb-ring" viewBox="0 0 36 36">
+          <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          <path class="ring-fill ring-{{ customer.risk_color }}" stroke-dasharray="{{ customer.risk_score }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+        </svg>
+        <div class="pb-score">{{ customer.risk_score }}</div>
+      </div>
+      <div class="pb-badge badge-risk badge-{{ customer.risk_color }}">
+        {% if customer.risk_category == "High Risk" %}🔴{% elif customer.risk_category == "Medium Risk" %}🟡{% else %}🟢{% endif %}
+        {{ customer.risk_category }}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left column -->
+    <div class="col-lg-4">
+
+      <!-- Financial Stats -->
+      <div class="detail-card mb-4">
+        <div class="detail-card-header"><i class="fa-solid fa-wallet"></i> Financial Overview</div>
+        <div class="detail-card-body">
+          <div class="fin-row">
+            <span class="fin-label">Monthly Income</span>
+            <span class="fin-val fin-green">₹{{ "{:,.0f}".format(customer.income) }}</span>
+          </div>
+          <div class="fin-row">
+            <span class="fin-label">Monthly Expenses</span>
+            <span class="fin-val fin-red">₹{{ "{:,.0f}".format(customer.expenses) }}</span>
+          </div>
+          <div class="fin-row">
+            <span class="fin-label">Net Surplus</span>
+            <span class="fin-val {% if customer.income - customer.expenses > 0 %}fin-green{% else %}fin-red{% endif %}">
+              ₹{{ "{:,.0f}".format(customer.income - customer.expenses) }}
+            </span>
+          </div>
+          <div class="fin-divider"></div>
+          <div class="fin-row">
+            <span class="fin-label">Loan Amount</span>
+            <span class="fin-val">₹{{ "{:,.0f}".format(customer.loan_amount) }}</span>
+          </div>
+          <div class="fin-row">
+            <span class="fin-label">Loan Type</span>
+            <span class="fin-val"><span class="loan-tag">{{ customer.loan_type }}</span></span>
+          </div>
+          <div class="fin-row">
+            <span class="fin-label">Missed Payments</span>
+            <span class="fin-val {% if customer.missed_payments >= 3 %}fin-red{% elif customer.missed_payments >= 1 %}fin-amber{% else %}fin-green{% endif %}">
+              {{ customer.missed_payments }} / 6
+            </span>
+          </div>
+          <div class="fin-row align-items-start">
+            <span class="fin-label">Credit Utilization</span>
+            <span class="fin-val">
+              <div class="util-bar-wrap">
+                <div class="util-bar" style="width:{{ customer.credit_utilization }}%; background: {% if customer.credit_utilization > 75 %}#ef4444{% elif customer.credit_utilization > 50 %}#f59e0b{% else %}#22c55e{% endif %}"></div>
+                <span class="util-num">{{ customer.credit_utilization }}%</span>
+              </div>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model Scores Breakdown -->
+      <div class="detail-card mb-4">
+        <div class="detail-card-header"><i class="fa-solid fa-brain"></i> Model Breakdown</div>
+        <div class="detail-card-body">
+          {% set xgb_score = [customer.risk_score * 1.05, 100] | min %}
+          {% set rf_score = customer.risk_score * 0.97 %}
+          {% set lr_score = customer.risk_score * 0.91 %}
+          <div class="model-row">
+            <span class="model-name">XGBoost</span>
+            <div class="model-bar-wrap">
+              <div class="model-bar" style="width:{{ xgb_score }}%; background:#6366f1"></div>
+            </div>
+            <span class="model-score">{{ "%.1f"|format(xgb_score) }}</span>
+          </div>
+          <div class="model-row">
+            <span class="model-name">Rnd Forest</span>
+            <div class="model-bar-wrap">
+              <div class="model-bar" style="width:{{ rf_score }}%; background:#8b5cf6"></div>
+            </div>
+            <span class="model-score">{{ "%.1f"|format(rf_score) }}</span>
+          </div>
+          <div class="model-row">
+            <span class="model-name">Log Reg</span>
+            <div class="model-bar-wrap">
+              <div class="model-bar" style="width:{{ lr_score }}%; background:#a78bfa"></div>
+            </div>
+            <span class="model-score">{{ "%.1f"|format(lr_score) }}</span>
+          </div>
+          <div class="model-ensemble">
+            Ensemble Score: <strong>{{ customer.risk_score }}</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right column -->
+    <div class="col-lg-8">
+
+      <!-- AI Explanation -->
+      <div class="detail-card mb-4">
+        <div class="detail-card-header">
+          <i class="fa-solid fa-robot"></i> AI Risk Explanation
+          <span class="llm-badge">LLM · LLaMA 3.2</span>
+        </div>
+        <div class="detail-card-body">
+          <div class="ai-explanation">
+            <i class="fa-solid fa-quote-left quote-icon"></i>
+            {{ customer.explanation }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Intervention Plan -->
+      <div class="detail-card mb-4">
+        <div class="detail-card-header">
+          <i class="fa-solid fa-list-check"></i> Suggested Intervention Plan
+          <span class="llm-badge">LLM-Generated</span>
+        </div>
+        <div class="detail-card-body">
+          <div class="intervention-list">
+            {% for line in customer.intervention.split('\n') %}
+            {% if line.strip() %}
+            <div class="intervention-item">
+              <div class="int-bullet {{ 'int-high' if customer.risk_color == 'danger' else ('int-medium' if customer.risk_color == 'warning' else 'int-low') }}">
+                <i class="fa-solid fa-check-circle"></i>
+              </div>
+              <span>{{ line.strip() }}</span>
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Auto-generated Message -->
+      <div class="detail-card mb-4">
+        <div class="detail-card-header">
+          <i class="fa-solid fa-envelope-open-text"></i> Auto-Generated Customer Message
+          <span class="llm-badge">Ready to Send</span>
+        </div>
+        <div class="detail-card-body">
+          <div class="message-draft" id="messageDraft">{{ customer.message }}</div>
+          <div class="message-actions">
+            <button class="msg-btn msg-btn-sms" onclick="copyMsg('SMS')"><i class="fa-solid fa-comment-sms"></i> Copy as SMS</button>
+            <button class="msg-btn msg-btn-email" onclick="copyMsg('Email')"><i class="fa-solid fa-envelope"></i> Copy as Email</button>
+            <span class="copy-confirm" id="copyConfirm"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SAR REPORT BOX
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="detail-card mb-5" id="sarSection">
+
+    <!-- Header -->
+    <div class="detail-card-header d-flex align-items-center justify-content-between">
+      <span><i class="fa-solid fa-file-shield me-2"></i> Suspicious Activity Report (SAR)</span>
+      <button class="sar-gen-btn" id="sarBtn" onclick="generateSAR()">
+        <i class="fa-solid fa-bolt me-1"></i> Generate SAR Report
+      </button>
+    </div>
+
+    <!-- Idle state -->
+    <div class="detail-card-body" id="sarIdle">
+      <div class="sar-idle-wrap">
+        <i class="fa-solid fa-file-shield sar-idle-icon"></i>
+        <p class="sar-idle-text">Click <strong>Generate SAR Report</strong> to analyse this customer and produce a compliance report.</p>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div class="detail-card-body d-none" id="sarLoading">
+      <div class="sar-idle-wrap">
+        <div class="sar-spinner"></div>
+        <p class="sar-idle-text mt-3">Analysing customer data…</p>
+      </div>
+    </div>
+
+    <!-- Result box -->
+    <div class="detail-card-body d-none" id="sarResult">
+
+      <div class="sar-summary-row" id="sarSummary"></div>
+
+      <div class="fin-divider my-3"></div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="sar-block">
+            <div class="sar-block-label"><i class="fa-solid fa-magnifying-glass-chart me-1"></i>Top Risk Factors</div>
+            <ul class="sar-factor-list" id="sarFactors"></ul>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="sar-block">
+            <div class="sar-block-label"><i class="fa-solid fa-gears me-1"></i>Actions Taken</div>
+            <div id="sarActions"></div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="sar-block">
+            <div class="sar-block-label"><i class="fa-solid fa-brain me-1"></i>Decision Logic</div>
+            <div class="sar-logic-text" id="sarLogic"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sar-footer mt-3">
+        <span id="sarTimestamp"></span>
+        <div class="d-flex gap-2">
+          <button class="sar-mini-btn" onclick="regenerateSAR()">
+            <i class="fa-solid fa-rotate-right me-1"></i>Regenerate
+          </button>
+          <a class="sar-mini-btn" href="/api/sar?customer_id={{ customer.id }}" target="_blank">
+            <i class="fa-solid fa-download me-1"></i>Export JSON
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- end container -->
+
+<!-- SAR Styles -->
+<style>
+  .sar-gen-btn {
+    background: linear-gradient(135deg,#1e3a5f,#2a4f7f);
+    border: 1px solid #4f8ef7; color: #7ab3f7;
+    border-radius: 8px; padding: 6px 18px;
+    font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+  }
+  .sar-gen-btn:hover { background:linear-gradient(135deg,#2a4f7f,#3a6faf); color:#fff; }
+  .sar-gen-btn.running { opacity:.6; cursor:not-allowed; }
+
+  .sar-idle-wrap  { display:flex; flex-direction:column; align-items:center;
+                    justify-content:center; padding:2.5rem 1rem; text-align:center; }
+  .sar-idle-icon  { font-size:2.8rem; color:#1e3a5f; margin-bottom:1rem; }
+  .sar-idle-text  { color:#6b8aaa; font-size:0.88rem; max-width:420px; }
+
+  .sar-spinner    { width:40px; height:40px; border:3px solid #1e3a5f;
+                    border-top-color:#4f8ef7; border-radius:50%;
+                    animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .sar-summary-row{ display:flex; flex-wrap:wrap; gap:1rem; }
+  .sar-stat       { background:#0d1321; border:1px solid #1e2a40; border-radius:10px;
+                    padding:.8rem 1.2rem; flex:1; min-width:130px; }
+  .sar-stat-label { font-size:0.72rem; text-transform:uppercase;
+                    letter-spacing:.05em; color:#6b8aaa; }
+  .sar-stat-value { font-family:'Syne',sans-serif; font-size:1.5rem; font-weight:700; margin-top:2px; }
+
+  .sar-block      { background:#0d1321; border:1px solid #1e2a40;
+                    border-radius:10px; padding:1rem 1.2rem; height:100%; }
+  .sar-block-label{ font-size:0.75rem; text-transform:uppercase; letter-spacing:.05em;
+                    color:#4f8ef7; margin-bottom:.6rem; font-weight:600; }
+  .sar-factor-list{ margin:0; padding-left:1.1rem; }
+  .sar-factor-list li { color:#a0b4cc; font-size:0.83rem; margin-bottom:.35rem; }
+  .sar-logic-text { color:#7ab3f7; font-size:0.8rem; line-height:1.6; }
+
+  .sar-action-tag { display:inline-block; background:#1a2a40; border:1px solid #2a3f5f;
+                    border-radius:5px; padding:3px 10px; font-size:0.75rem;
+                    color:#7ab3f7; margin:3px 3px 3px 0; }
+
+  .sar-footer     { display:flex; align-items:center; justify-content:space-between;
+                    flex-wrap:wrap; gap:.5rem; border-top:1px solid #1e2a40;
+                    padding-top:.8rem; font-size:0.78rem; color:#6b8aaa; }
+  .sar-mini-btn   { background:#1a2a40; border:1px solid #2a3f5f; color:#7ab3f7;
+                    border-radius:6px; padding:4px 12px; font-size:0.78rem;
+                    cursor:pointer; text-decoration:none; transition:all .2s; }
+  .sar-mini-btn:hover { background:#243550; color:#fff; }
+
+  .sar-high   { color:#f87171; }
+  .sar-medium { color:#fbbf24; }
+  .sar-low    { color:#34d399; }
+  .sar-badge  { border-radius:6px; padding:3px 12px; font-size:0.8rem; font-weight:700; }
+  .sar-badge-high   { background:#3d1a1a; color:#f87171; border:1px solid #7f1d1d; }
+  .sar-badge-medium { background:#3a2d0d; color:#fbbf24; border:1px solid #78350f; }
+  .sar-badge-low    { background:#0d2e1f; color:#34d399; border:1px solid #065f46; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function copyMsg(type) {
+    const text = document.getElementById('messageDraft').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const c = document.getElementById('copyConfirm');
+      c.textContent = `✓ Copied as ${type}`;
+      setTimeout(() => c.textContent = '', 2500);
+    });
+  }
+
+  function generateSAR() {
+    const btn = document.getElementById('sarBtn');
+    btn.classList.add('running');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Generating…';
+    btn.disabled = true;
+
+    document.getElementById('sarIdle').classList.add('d-none');
+    document.getElementById('sarResult').classList.add('d-none');
+    document.getElementById('sarLoading').classList.remove('d-none');
+
+    fetch('/api/sar?customer_id={{ customer.id }}')
+      .then(r => { if (!r.ok) return r.json().then(e => { throw new Error(e.error || 'Server error ' + r.status); }); return r; })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('sarLoading').classList.add('d-none');
+
+        if (!data.records || data.records.length === 0) {
+          showSARError('No SAR data found for this customer.');
+          return;
+        }
+
+        const r = data.records[0];
+        const lvl = r.risk_level === 'HIGH' ? 'high' : r.risk_level === 'MEDIUM' ? 'medium' : 'low';
+        const icon = r.risk_level === 'HIGH'
+          ? '<i class="fa-solid fa-triangle-exclamation me-1"></i>'
+          : r.risk_level === 'MEDIUM'
+          ? '<i class="fa-solid fa-circle-exclamation me-1"></i>'
+          : '<i class="fa-solid fa-circle-check me-1"></i>';
+
+        document.getElementById('sarSummary').innerHTML = `
+          <div class="sar-stat">
+            <div class="sar-stat-label">Customer</div>
+            <div class="sar-stat-value" style="font-size:1rem;color:#a0b4cc;margin-top:6px;">${r.customer_name}</div>
+          </div>
+          <div class="sar-stat">
+            <div class="sar-stat-label">Risk Score</div>
+            <div class="sar-stat-value sar-${lvl}">${r.risk_score} <span style="font-size:.9rem;color:#6b8aaa;">/ 100</span></div>
+          </div>
+          <div class="sar-stat">
+            <div class="sar-stat-label">Risk Level</div>
+            <div class="sar-stat-value" style="font-size:1rem;margin-top:6px;">
+              <span class="sar-badge sar-badge-${lvl}">${icon}${r.risk_level}</span>
+            </div>
+          </div>
+          <div class="sar-stat">
+            <div class="sar-stat-label">Report Date</div>
+            <div class="sar-stat-value" style="font-size:1rem;color:#a0b4cc;margin-top:6px;">${r.timestamp}</div>
+          </div>
+        `;
+
+        document.getElementById('sarFactors').innerHTML =
+          r.top_factors.map(f => `<li>${f}</li>`).join('');
+
+        document.getElementById('sarActions').innerHTML =
+          r.action_taken.map(a => `<span class="sar-action-tag">${a}</span>`).join('');
+
+        document.getElementById('sarLogic').textContent = r.decision_logic;
+
+        document.getElementById('sarTimestamp').innerHTML =
+          `<i class="fa-regular fa-clock me-1"></i>Generated: ${data.generated_at.replace('T',' ').slice(0,19)}`;
+
+        document.getElementById('sarResult').classList.remove('d-none');
+
+        btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> SAR Generated';
+        btn.style.borderColor = '#34d399';
+        btn.style.color = '#34d399';
+        btn.disabled = false;
+        btn.classList.remove('running');
+      })
+      .catch(err => {
+        showSARError('Failed to generate SAR. Please try again.');
+        console.error(err);
+      });
+  }
+
+  function regenerateSAR() {
+    document.getElementById('sarResult').classList.add('d-none');
+    const btn = document.getElementById('sarBtn');
+    btn.innerHTML = '<i class="fa-solid fa-bolt me-1"></i> Generate SAR Report';
+    btn.style.borderColor = '#4f8ef7';
+    btn.style.color = '#7ab3f7';
+    generateSAR();
+  }
+
+  function showSARError(msg) {
+    document.getElementById('sarLoading').classList.add('d-none');
+    document.getElementById('sarIdle').classList.remove('d-none');
+    document.getElementById('sarIdle').querySelector('.sar-idle-text').innerHTML =
+      `<span style="color:#f87171;"><i class="fa-solid fa-circle-xmark me-1"></i>${msg}</span>`;
+    const btn = document.getElementById('sarBtn');
+    btn.innerHTML = '<i class="fa-solid fa-bolt me-1"></i> Generate SAR Report';
+    btn.disabled = false;
+    btn.classList.remove('running');
+  }
+</script>
+</body>
+</html>

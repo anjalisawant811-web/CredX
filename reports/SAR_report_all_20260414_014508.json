@@ -1,0 +1,55 @@
+{
+  "report_type": "Suspicious Activity Report (SAR)",
+  "generated_at": "2026-04-14T01:45:08.521310",
+  "total_records": 3,
+  "records": [
+    {
+      "customer_id": 3,
+      "customer_name": "Satyajeet Patil",
+      "risk_score": 51.58,
+      "risk_level": "MEDIUM",
+      "top_factors": [
+        "missed-emi (6 missed payments)"
+      ],
+      "decision_logic": "Rule-Based: score=51.58 → Medium Risk | LLM Reasoning: Random Forest identifies moderate stress signals with some volatility. Preventive engagement recommended.",
+      "action_taken": [
+        "sms-alert",
+        "proactive-wellness-email",
+        "auto-debit-enrollment-suggested"
+      ],
+      "timestamp": "2026-04-14"
+    },
+    {
+      "customer_id": 1,
+      "customer_name": "Pratyusha Nalavade",
+      "risk_score": 45.7,
+      "risk_level": "MEDIUM",
+      "top_factors": [
+        "missed-emi (3 missed payments)"
+      ],
+      "decision_logic": "Rule-Based: score=45.7 → Medium Risk | LLM Reasoning: Random Forest identifies moderate stress signals with some volatility. Preventive engagement recommended.",
+      "action_taken": [
+        "sms-alert",
+        "proactive-wellness-email",
+        "auto-debit-enrollment-suggested"
+      ],
+      "timestamp": "2026-04-13"
+    },
+    {
+      "customer_id": 2,
+      "customer_name": "rahi ",
+      "risk_score": 40.6,
+      "risk_level": "MEDIUM",
+      "top_factors": [
+        "missed-emi (3 missed payments)"
+      ],
+      "decision_logic": "Rule-Based: score=40.6 → Medium Risk | LLM Reasoning: Random Forest identifies moderate stress signals with some volatility. Preventive engagement recommended.",
+      "action_taken": [
+        "sms-alert",
+        "proactive-wellness-email",
+        "auto-debit-enrollment-suggested"
+      ],
+      "timestamp": "2026-04-13"
+    }
+  ]
+}
