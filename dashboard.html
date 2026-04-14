@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CredX – Pre-Delinquency Intervention Engine</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg credx-navbar">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <span class="brand-text">Cred<span class="brand-x">X</span></span>
+    </a>
+    <div class="navbar-nav ms-auto d-flex flex-row align-items-center gap-3">
+      <span class="nav-badge"><i class="fa-solid fa-circle-dot pulse-green"></i> Live</span>
+      <div class="employee-chip">
+        <i class="fa-solid fa-user-tie"></i>
+        <span>Emp: CR-4821</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Strip -->
+<div class="hero-strip">
+  <div class="container-fluid px-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1 class="hero-title">Risk Command Center</h1>
+        <p class="hero-sub">Real-time delinquency monitoring across your customer portfolio</p>
+      </div>
+      <a href="/add_customer" class="btn-credx-primary">
+        <i class="fa-solid fa-user-plus"></i> Add Customer
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="container-fluid px-4 mt-4">
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card stat-total">
+        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-num">{{ stats.total }}</div>
+        <div class="stat-label">Total Customers</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card stat-high">
+        <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="stat-num">{{ stats.high }}</div>
+        <div class="stat-label">High Risk</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card stat-medium">
+        <div class="stat-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <div class="stat-num">{{ stats.medium }}</div>
+        <div class="stat-label">Medium Risk</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card stat-low">
+        <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="stat-num">{{ stats.low }}</div>
+        <div class="stat-label">Low Risk</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search + Filter Bar -->
+  <div class="filter-bar mb-3">
+    <input type="text" id="searchInput" class="filter-input" placeholder="🔍  Search by name, risk level…" onkeyup="filterTable()"/>
+    <div class="filter-pills">
+      <button class="pill active" onclick="filterByRisk('all', this)">All</button>
+      <button class="pill pill-danger" onclick="filterByRisk('High Risk', this)">High</button>
+      <button class="pill pill-warning" onclick="filterByRisk('Medium Risk', this)">Medium</button>
+      <button class="pill pill-success" onclick="filterByRisk('Low Risk', this)">Low</button>
+    </div>
+  </div>
+
+  <!-- Customer Table -->
+  <div class="table-wrapper">
+    <table class="credx-table" id="customerTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Customer</th>
+          <th>Loan Type</th>
+          <th>Income</th>
+          <th>Credit Util.</th>
+          <th>Missed PMTs</th>
+          <th>Risk Score</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr class="customer-row" data-risk="{{ c.risk_category }}">
+          <td class="text-muted small">{{ c.id }}</td>
+          <td>
+            <div class="customer-cell">
+              <div class="avatar avatar-{{ c.risk_color }}">{{ c.name[0] }}</div>
+              <div>
+                <div class="cname">{{ c.name }}</div>
+                <div class="csub">{{ c.added_on }}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="loan-tag">{{ c.loan_type }}</span></td>
+          <td class="mono">₹{{ "{:,.0f}".format(c.income) }}</td>
+          <td>
+            <div class="util-bar-wrap">
+              <div class="util-bar" style="width:{{ c.credit_utilization }}%; background: {% if c.credit_utilization > 75 %}#ef4444{% elif c.credit_utilization > 50 %}#f59e0b{% else %}#22c55e{% endif %}"></div>
+              <span class="util-num">{{ c.credit_utilization }}%</span>
+            </div>
+          </td>
+          <td class="text-center mono">{{ c.missed_payments }}</td>
+          <td>
+            <div class="score-wrap">
+              <svg class="score-ring" viewBox="0 0 36 36">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill ring-{{ c.risk_color }}" stroke-dasharray="{{ c.risk_score }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <span class="score-text score-{{ c.risk_color }}">{{ c.risk_score }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge-risk badge-{{ c.risk_color }}">
+              {% if c.risk_category == "High Risk" %}🔴{% elif c.risk_category == "Medium Risk" %}🟡{% else %}🟢{% endif %}
+              {{ c.risk_category }}
+            </span>
+          </td>
+          <td>
+            <a href="/customer/{{ c.id }}" class="btn-view">
+              <i class="fa-solid fa-eye"></i> View
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer -->
+  <div class="dash-footer">
+    <span>CredX v1.0 · Powered by XGBoost + Random Forest + LR Ensemble</span>
+    <span id="live-time"></span>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Live clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('live-time').textContent = now.toLocaleString('en-IN', {
+      dateStyle: 'medium', timeStyle: 'short'
+    });
+  }
+  updateClock(); setInterval(updateClock, 30000);
+
+  let activeRisk = 'all';
+
+  function filterTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('.customer-row').forEach(row => {
+      const text = row.textContent.toLowerCase();
+      const risk = row.dataset.risk;
+      const matchSearch = text.includes(q);
+      const matchRisk = activeRisk === 'all' || risk === activeRisk;
+      row.style.display = matchSearch && matchRisk ? '' : 'none';
+    });
+  }
+
+  function filterByRisk(risk, btn) {
+    activeRisk = risk;
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    filterTable();
+  }
+</script>
+</body>
+</html>

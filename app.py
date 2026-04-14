@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from flask import Flask, render_template, request, redirect, url_for, jsonify,send_file
+=======
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+>>>>>>> 5307dac30ba0e2777e80db9575da08bb6ee9d1a9
 import random
 import math
 import os
@@ -7,7 +11,11 @@ from db.connection import get_conn
 from datetime import datetime
 from services import RiskService
 from db import init_db, get_conn
+<<<<<<< HEAD
 from sar_report import get_sar_records, generate_sar_pdf_bytes
+=======
+from sar_report import get_sar_records
+>>>>>>> 5307dac30ba0e2777e80db9575da08bb6ee9d1a9
 import sqlite3
 
 init_db()
@@ -347,6 +355,7 @@ def api_stats():
 @app.route("/sar")
 def sar_page():
     records = get_sar_records()
+<<<<<<< HEAD
  
     high_n   = sum(1 for r in records if r["risk_level"] == "HIGH")
     medium_n = sum(1 for r in records if r["risk_level"] == "MEDIUM")
@@ -363,12 +372,25 @@ def sar_page():
         "sar.html",
         records=records,
         stats=stats,
+=======
+    print("SAR RECORDS:", records) 
+
+    stats = {
+        "total": len(records)
+    }
+
+    return render_template(
+        "sar.html",
+        records=records,
+        stats=stats,   # 👈 THIS LINE WAS MISSING
+>>>>>>> 5307dac30ba0e2777e80db9575da08bb6ee9d1a9
         generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
 
 
 @app.route("/api/sar")
 def api_sar():
+<<<<<<< HEAD
     try:
         cid = request.args.get("customer_id", type=int)
         records = get_sar_records(customer_id=cid)
@@ -397,8 +419,22 @@ def sar_pdf_download():
         download_name=filename,
     )
  
+=======
+    cid = request.args.get("customer_id", type=int)
+    records = get_sar_records(customer_id=cid)
+    return jsonify({
+        "report_type": "Suspicious Activity Report (SAR)",
+        "generated_at": datetime.now().isoformat(),
+        "total_records": len(records),
+        "records": records,
+    })
+>>>>>>> 5307dac30ba0e2777e80db9575da08bb6ee9d1a9
 
 
 # ─── Entry Point ──────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+<<<<<<< HEAD
     app.run(debug=True)
+=======
+    app.run(debug=True)
+>>>>>>> 5307dac30ba0e2777e80db9575da08bb6ee9d1a9

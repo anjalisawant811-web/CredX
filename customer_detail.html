@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ customer.name }} – CredX</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg credx-navbar">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <span class="brand-text">Cred<span class="brand-x">X</span></span>
+    </a>
+    <div class="navbar-nav ms-auto d-flex flex-row align-items-center gap-3">
+      <a href="/" class="nav-back"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+      <div class="employee-chip"><i class="fa-solid fa-user-tie"></i><span>Emp: CR-4821</span></div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-4 py-4">
+
+  <!-- Profile Banner -->
+  <div class="profile-banner profile-{{ customer.risk_color }} mb-4">
+    <div class="pb-left">
+      <div class="pb-avatar">{{ customer.name[0] }}</div>
+      <div>
+        <h2 class="pb-name">{{ customer.name }}</h2>
+        <div class="pb-meta">
+          <span><i class="fa-solid fa-envelope"></i> {{ customer.email }}</span>
+          <span><i class="fa-solid fa-phone"></i> {{ customer.phone }}</span>
+          <span><i class="fa-solid fa-calendar"></i> Added {{ customer.added_on }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="pb-right">
+      <div class="pb-score-wrap">
+        <svg class="pb-ring" viewBox="0 0 36 36">
+          <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          <path class="ring-fill ring-{{ customer.risk_color }}" stroke-dasharray="{{ customer.risk_score }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+        </svg>
+        <div class="pb-score">{{ customer.risk_score }}</div>
+      </div>
+      <div class="pb-badge badge-risk badge-{{ customer.risk_color }}">
+        {% if customer.risk_category == "High Risk" %}🔴{% elif customer.risk_category == "Medium Risk" %}🟡{% else %}🟢{% endif %}
+        {{ customer.risk_category }}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left column -->
+    <div class="col-lg-4">
+
+      <!-- Financial Stats -->
+      <div class="detail-card mb-4">
+        <div class="detail-card-header"><i class="fa-solid fa-wallet"></i> Financial Overview</div>
+        <div class="detail-card-body">
+          <div class="fin-row">
+            <span class="fin-label">Monthly Income</span>
+            <span class="fin-val fin-green">₹{{ "{:,.0f}".format(customer.income) }}</span>
+          </div>
+          <div class="fin-row">
+            <span class="fin-label">Monthly Expenses</span>
+            <span class="fin-val fin-red">₹{{ "{:,.0f}".format(customer.expenses) }}</span>
+          </div>
+          <div class="fin-row">
+            <span class="fin-label">Net Surplus</span>
+            <span class="fin-val {% if customer.income - customer.expenses > 0 %}fin-green{% else %}fin-red{% endif %}">
+              ₹{{ "{:,.0f}".format(customer.income - customer.expenses) }}
+            </span>
+          </div>
+          <div class="fin-divider"></div>
+          <div class="fin-row">
+            <span class="fin-label">Loan Amount</span>
+            <span class="fin-val">₹{{ "{:,.0f}".format(customer.loan_amount) }}</span>
+          </div>
+          <div class="fin-row">
+            <span class="fin-label">Loan Type</span>
+            <span class="fin-val"><span class="loan-tag">{{ customer.loan_type }}</span></span>
+          </div>
+          <div class="fin-row">
+            <span class="fin-label">Missed Payments</span>
+            <span class="fin-val {% if customer.missed_payments >= 3 %}fin-red{% elif customer.missed_payments >= 1 %}fin-amber{% else %}fin-green{% endif %}">
+              {{ customer.missed_payments }} / 6
+            </span>
+          </div>
+          <div class="fin-row align-items-start">
+            <span class="fin-label">Credit Utilization</span>
+            <span class="fin-val">
+              <div class="util-bar-wrap">
+                <div class="util-bar" style="width:{{ customer.credit_utilization }}%; background: {% if customer.credit_utilization > 75 %}#ef4444{% elif customer.credit_utilization > 50 %}#f59e0b{% else %}#22c55e{% endif %}"></div>
+                <span class="util-num">{{ customer.credit_utilization }}%</span>
+              </div>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model Scores Breakdown -->
+      <div class="detail-card mb-4">
+        <div class="detail-card-header"><i class="fa-solid fa-brain"></i> Model Breakdown</div>
+        <div class="detail-card-body">
+          {% set xgb_score = [customer.risk_score * 1.05, 100] | min %}
+          {% set rf_score = customer.risk_score * 0.97 %}
+          {% set lr_score = customer.risk_score * 0.91 %}
+          <div class="model-row">
+            <span class="model-name">XGBoost</span>
+            <div class="model-bar-wrap">
+              <div class="model-bar" style="width:{{ xgb_score }}%; background:#6366f1"></div>
+            </div>
+            <span class="model-score">{{ "%.1f"|format(xgb_score) }}</span>
+          </div>
+          <div class="model-row">
+            <span class="model-name">Rnd Forest</span>
+            <div class="model-bar-wrap">
+              <div class="model-bar" style="width:{{ rf_score }}%; background:#8b5cf6"></div>
+            </div>
+            <span class="model-score">{{ "%.1f"|format(rf_score) }}</span>
+          </div>
+          <div class="model-row">
+            <span class="model-name">Log Reg</span>
+            <div class="model-bar-wrap">
+              <div class="model-bar" style="width:{{ lr_score }}%; background:#a78bfa"></div>
+            </div>
+            <span class="model-score">{{ "%.1f"|format(lr_score) }}</span>
+          </div>
+          <div class="model-ensemble">
+            Ensemble Score: <strong>{{ customer.risk_score }}</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right column -->
+    <div class="col-lg-8">
+
+      <!-- AI Explanation -->
+      <div class="detail-card mb-4">
+        <div class="detail-card-header">
+          <i class="fa-solid fa-robot"></i> AI Risk Explanation
+          <span class="llm-badge">LLM · LLaMA 3.2</span>
+        </div>
+        <div class="detail-card-body">
+          <div class="ai-explanation">
+            <i class="fa-solid fa-quote-left quote-icon"></i>
+            {{ customer.explanation }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Intervention Plan -->
+      <div class="detail-card mb-4">
+        <div class="detail-card-header">
+          <i class="fa-solid fa-list-check"></i> Suggested Intervention Plan
+          <span class="llm-badge">LLM-Generated</span>
+        </div>
+        <div class="detail-card-body">
+          <div class="intervention-list">
+            {% for line in customer.intervention.split('\n') %}
+            {% if line.strip() %}
+            <div class="intervention-item">
+              <div class="int-bullet {{ 'int-high' if customer.risk_color == 'danger' else ('int-medium' if customer.risk_color == 'warning' else 'int-low') }}">
+                <i class="fa-solid fa-check-circle"></i>
+              </div>
+              <span>{{ line.strip() }}</span>
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Auto-generated Message -->
+      <div class="detail-card mb-4">
+        <div class="detail-card-header">
+          <i class="fa-solid fa-envelope-open-text"></i> Auto-Generated Customer Message
+          <span class="llm-badge">Ready to Send</span>
+        </div>
+        <div class="detail-card-body">
+          <div class="message-draft" id="messageDraft">{{ customer.message }}</div>
+          <div class="message-actions">
+            <button class="msg-btn msg-btn-sms" onclick="copyMsg('SMS')"><i class="fa-solid fa-comment-sms"></i> Copy as SMS</button>
+            <button class="msg-btn msg-btn-email" onclick="copyMsg('Email')"><i class="fa-solid fa-envelope"></i> Copy as Email</button>
+            <span class="copy-confirm" id="copyConfirm"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function copyMsg(type) {
+    const text = document.getElementById('messageDraft').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const c = document.getElementById('copyConfirm');
+      c.textContent = `✓ Copied as ${type}`;
+      setTimeout(() => c.textContent = '', 2500);
+    });
+  }
+</script>
+</body>
+</html>
