@@ -2,9 +2,17 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import random
 import math
 import os
-from datetime import datetime
 
-# Explicitly set template and static folders relative to this file
+from db.connection import get_conn
+from datetime import datetime
+from services import RiskService
+from db import init_db, get_conn
+from sar_report import get_sar_records
+import sqlite3
+
+init_db()
+
+# ─── App Setup ────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(
     __name__,
@@ -12,115 +20,9 @@ app = Flask(
     static_folder=os.path.join(BASE_DIR, "static")
 )
 
-# ─── In-Memory Database ────────────────────────────────────────────────────────
-customers = [
-    {
-        "id": 1,
-        "name": "Priya Sharma",
-        "income": 85000,
-        "expenses": 72000,
-        "missed_payments": 2,
-        "credit_utilization": 78,
-        "added_on": "2025-01-10",
-        "email": "priya.sharma@email.com",
-        "phone": "+91-9876543210",
-        "loan_amount": 500000,
-        "loan_type": "Personal Loan"
-    },
-    {
-        "id": 2,
-        "name": "Rahul Verma",
-        "income": 120000,
-        "expenses": 45000,
-        "missed_payments": 0,
-        "credit_utilization": 22,
-        "added_on": "2025-01-15",
-        "email": "rahul.verma@email.com",
-        "phone": "+91-9123456789",
-        "loan_amount": 800000,
-        "loan_type": "Home Loan"
-    },
-    {
-        "id": 3,
-        "name": "Anjali Mehta",
-        "income": 60000,
-        "expenses": 58000,
-        "missed_payments": 4,
-        "credit_utilization": 91,
-        "added_on": "2025-01-18",
-        "email": "anjali.mehta@email.com",
-        "phone": "+91-9988776655",
-        "loan_amount": 300000,
-        "loan_type": "Personal Loan"
-    },
-    {
-        "id": 4,
-        "name": "Vikram Singh",
-        "income": 200000,
-        "expenses": 80000,
-        "missed_payments": 0,
-        "credit_utilization": 15,
-        "added_on": "2025-01-20",
-        "email": "vikram.singh@email.com",
-        "phone": "+91-9001234567",
-        "loan_amount": 2000000,
-        "loan_type": "Business Loan"
-    },
-    {
-        "id": 5,
-        "name": "Sneha Patel",
-        "income": 55000,
-        "expenses": 50000,
-        "missed_payments": 1,
-        "credit_utilization": 55,
-        "added_on": "2025-02-01",
-        "email": "sneha.patel@email.com",
-        "phone": "+91-9765432101",
-        "loan_amount": 250000,
-        "loan_type": "Vehicle Loan"
-    },
-    {
-        "id": 6,
-        "name": "Arjun Nair",
-        "income": 95000,
-        "expenses": 88000,
-        "missed_payments": 3,
-        "credit_utilization": 85,
-        "added_on": "2025-02-05",
-        "email": "arjun.nair@email.com",
-        "phone": "+91-9345678901",
-        "loan_amount": 600000,
-        "loan_type": "Personal Loan"
-    },
-    {
-        "id": 7,
-        "name": "Meena Krishnan",
-        "income": 150000,
-        "expenses": 60000,
-        "missed_payments": 0,
-        "credit_utilization": 10,
-        "added_on": "2025-02-10",
-        "email": "meena.k@email.com",
-        "phone": "+91-9456789012",
-        "loan_amount": 1500000,
-        "loan_type": "Home Loan"
-    },
-    {
-        "id": 8,
-        "name": "Deepak Joshi",
-        "income": 42000,
-        "expenses": 41000,
-        "missed_payments": 5,
-        "credit_utilization": 95,
-        "added_on": "2025-02-15",
-        "email": "deepak.joshi@email.com",
-        "phone": "+91-9567890123",
-        "loan_amount": 150000,
-        "loan_type": "Personal Loan"
-    },
-]
+init_db()
+risk_service = RiskService()
 
-next_id = 9  # auto-increment
 
 # ─── ML Model (Ensemble Simulation) ───────────────────────────────────────────
 def compute_risk_score(income, expenses, missed_payments, credit_utilization):
@@ -131,21 +33,21 @@ def compute_risk_score(income, expenses, missed_payments, credit_utilization):
     income = max(income, 1)
     expense_ratio = min(expenses / income, 1.5)
 
-    # Logistic Regression component (linear boundary)
+    # Logistic Regression component
     lr_score = (
         0.30 * expense_ratio +
         0.35 * (missed_payments / 6) +
         0.35 * (credit_utilization / 100)
     )
 
-    # Random Forest component (non-linear interaction)
+    # Random Forest component
     rf_score = math.sqrt(
         0.25 * (expense_ratio ** 2) +
         0.40 * ((missed_payments / 6) ** 2) +
         0.35 * ((credit_utilization / 100) ** 2)
     )
 
-    # XGBoost component (boosted signal with missed_payments emphasis)
+    # XGBoost component
     xgb_raw = (
         1.5 * (missed_payments / 6) +
         1.0 * (credit_utilization / 100) +
@@ -157,6 +59,7 @@ def compute_risk_score(income, expenses, missed_payments, credit_utilization):
     ensemble = 0.40 * xgb_score + 0.35 * rf_score + 0.25 * lr_score
     return round(min(ensemble * 100, 100), 1)
 
+
 def get_risk_category(score):
     if score >= 70:
         return "High Risk"
@@ -165,6 +68,7 @@ def get_risk_category(score):
     else:
         return "Low Risk"
 
+
 def get_risk_color(score):
     if score >= 70:
         return "danger"
@@ -172,6 +76,7 @@ def get_risk_color(score):
         return "warning"
     else:
         return "success"
+
 
 # ─── LLM Simulation Layer ──────────────────────────────────────────────────────
 def generate_llm_explanation(customer, score, category):
@@ -208,6 +113,7 @@ def generate_llm_explanation(customer, score, category):
             f"Please contact your relationship manager or call our dedicated support line at 1800-XXX-XXXX.\n\n"
             f"Warm regards,\nCustomer Care Team\n[Bank Name]"
         )
+
     elif category == "Medium Risk":
         explanation = (
             f"{name} is at medium delinquency risk (Score: {score}/100). "
@@ -232,6 +138,7 @@ def generate_llm_explanation(customer, score, category):
             f"To know more, please visit your nearest branch or call 1800-XXX-XXXX.\n\n"
             f"Best regards,\nRelationship Management Team\n[Bank Name]"
         )
+
     else:
         explanation = (
             f"{name} is classified as low delinquency risk (Score: {score}/100). "
@@ -256,9 +163,11 @@ def generate_llm_explanation(customer, score, category):
             f"To explore these offers, contact your relationship manager or visit our website.\n\n"
             f"Sincerely,\nCustomer Experience Team\n[Bank Name]"
         )
+
     return explanation, intervention, message
 
-# ─── Enrich customer with ML + LLM outputs ────────────────────────────────────
+
+# ─── Helper: Enrich customer ──────────────────────────────────────────────────
 def enrich_customer(c):
     score = compute_risk_score(
         c["income"], c["expenses"], c["missed_payments"], c["credit_utilization"]
@@ -276,64 +185,194 @@ def enrich_customer(c):
         "message": message,
     }
 
-# Pre-enrich all preloaded customers
-for i, c in enumerate(customers):
-    customers[i] = enrich_customer(c)
+
+# ─── Helper: Safe type conversion ─────────────────────────────────────────────
+def safe_float(val, default=0.0):
+    try:
+        val = str(val).replace(",", "").strip()
+        return float(val) if val != "" else default
+    except:
+        return default
+
+
+def safe_int(val, default=0):
+    try:
+        val = str(val).strip()
+        return int(val) if val != "" else default
+    except:
+        return default
+
 
 # ─── Routes ────────────────────────────────────────────────────────────────────
+
 @app.route("/")
 def dashboard():
+    conn = get_conn()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM customers ORDER BY id DESC")
+    rows = cur.fetchall()
+    conn.close()
+
+    customers_db = [dict(row) for row in rows]
     stats = {
-        "total": len(customers),
-        "high": sum(1 for c in customers if c["risk_category"] == "High Risk"),
-        "medium": sum(1 for c in customers if c["risk_category"] == "Medium Risk"),
-        "low": sum(1 for c in customers if c["risk_category"] == "Low Risk"),
+        "total": len(customers_db),
+        "high": sum(1 for c in customers_db if c["risk_category"] == "High Risk"),
+        "medium": sum(1 for c in customers_db if c["risk_category"] == "Medium Risk"),
+        "low": sum(1 for c in customers_db if c["risk_category"] == "Low Risk"),
     }
-    return render_template("dashboard.html", customers=customers, stats=stats)
+    return render_template("dashboard.html", customers=customers_db, stats=stats)
+
 
 @app.route("/add_customer", methods=["GET", "POST"])
 def add_customer():
-    global next_id
     if request.method == "POST":
         try:
-            new_c = {
-                "id": next_id,
+            raw_data = {
                 "name": request.form["name"],
-                "income": float(request.form["income"]),
-                "expenses": float(request.form["expenses"]),
-                "missed_payments": int(request.form["missed_payments"]),
-                "credit_utilization": float(request.form["credit_utilization"]),
-                "added_on": datetime.now().strftime("%Y-%m-%d"),
+                "income": safe_float(request.form.get("income")),
+                "expenses": safe_float(request.form.get("expenses")),
+                "missed_payments": safe_int(request.form.get("missed_payments")),
+                "credit_utilization": safe_float(request.form.get("credit_utilization")),
+                "loan_amount": safe_float(request.form.get("loan_amount")),
+                "loan_type": request.form.get("loan_type", "Personal Loan"),
                 "email": request.form.get("email", "N/A"),
                 "phone": request.form.get("phone", "N/A"),
-                "loan_amount": float(request.form.get("loan_amount", 0)),
-                "loan_type": request.form.get("loan_type", "Personal Loan"),
+                "added_on": datetime.now().strftime("%Y-%m-%d")
             }
-            enriched = enrich_customer(new_c)
-            customers.append(enriched)
-            next_id += 1
-            return redirect(url_for("customer_detail", customer_id=enriched["id"]))
+
+            result = risk_service.evaluate(raw_data)
+            score = result["risk_score"]
+            category = get_risk_category(score)
+            color = get_risk_color(score)
+            explanation, intervention, message = generate_llm_explanation(raw_data, score, category)
+
+            enriched = {
+                **raw_data,
+                "risk_score": score,
+                "risk_category": category,
+                "risk_color": color,
+                "explanation": explanation,
+                "intervention": intervention,
+                "message": message,
+                "ml_breakdown": result
+            }
+
+            conn = get_conn()
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO customers (
+                    name, income, expenses, missed_payments,
+                    credit_utilization, loan_amount, loan_type,
+                    email, phone, added_on, risk_score, risk_category
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                enriched["name"], enriched["income"], enriched["expenses"],
+                enriched["missed_payments"], enriched["credit_utilization"],
+                enriched["loan_amount"], enriched["loan_type"],
+                enriched["email"], enriched["phone"], enriched["added_on"],
+                enriched["risk_score"], enriched["risk_category"]
+            ))
+            conn.commit()
+            customer_id = cur.lastrowid
+            conn.close()
+
+            return redirect(url_for("customer_detail", customer_id=customer_id))
+
         except Exception as e:
             return render_template("add_customer.html", error=str(e))
+
     return render_template("add_customer.html")
+
 
 @app.route("/customer/<int:customer_id>")
 def customer_detail(customer_id):
-    customer = next((c for c in customers if c["id"] == customer_id), None)
-    if not customer:
-        return redirect(url_for("dashboard"))
+    conn = get_conn()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM customers WHERE id = ?", (customer_id,))
+    row = cur.fetchone()
+    conn.close()
+
+    if row is None:
+        return "Customer not found", 404
+
+    customer = dict(row)
+
+    service = RiskService()
+    result = service.evaluate(customer)
+
+    customer["risk_score"] = result["risk_score"]
+    customer["shap"] = result.get("shap", {})  # 'shap' is not returned by the engine; default to empty dict
+
+    explanation, intervention, message = generate_llm_explanation(
+        customer, customer["risk_score"], customer["risk_category"]
+    )
+    customer["explanation"] = explanation
+    customer["intervention"] = intervention
+    customer["message"] = message
+
     return render_template("customer_detail.html", customer=customer)
+
+
+@app.route("/admin")
+def admin_panel():
+    conn = get_conn()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM customers ORDER BY id DESC")
+    customers = cur.fetchall()
+    conn.close()
+    return render_template("admin.html", customers=customers)
+
 
 @app.route("/api/stats")
 def api_stats():
+    conn = get_conn()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT risk_score, risk_category, name FROM customers")
+    rows = cur.fetchall()
+    conn.close()
     return jsonify({
-        "total": len(customers),
-        "high": sum(1 for c in customers if c["risk_category"] == "High Risk"),
-        "medium": sum(1 for c in customers if c["risk_category"] == "Medium Risk"),
-        "low": sum(1 for c in customers if c["risk_category"] == "Low Risk"),
-        "scores": [c["risk_score"] for c in customers],
-        "names": [c["name"].split()[0] for c in customers],
+        "total": len(rows),
+        "high": sum(1 for r in rows if r["risk_category"] == "High Risk"),
+        "medium": sum(1 for r in rows if r["risk_category"] == "Medium Risk"),
+        "low": sum(1 for r in rows if r["risk_category"] == "Low Risk"),
+        "scores": [r["risk_score"] for r in rows],
+        "names": [r["name"] for r in rows],
     })
 
+
+@app.route("/sar")
+def sar_page():
+    records = get_sar_records()
+    print("SAR RECORDS:", records) 
+
+    stats = {
+        "total": len(records)
+    }
+
+    return render_template(
+        "sar.html",
+        records=records,
+        stats=stats,   # 👈 THIS LINE WAS MISSING
+        generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    )
+
+
+@app.route("/api/sar")
+def api_sar():
+    cid = request.args.get("customer_id", type=int)
+    records = get_sar_records(customer_id=cid)
+    return jsonify({
+        "report_type": "Suspicious Activity Report (SAR)",
+        "generated_at": datetime.now().isoformat(),
+        "total_records": len(records),
+        "records": records,
+    })
+
+
+# ─── Entry Point ──────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     app.run(debug=True)
